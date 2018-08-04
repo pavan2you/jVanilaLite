@@ -18,8 +18,55 @@
 
 package com.jvanila.mobile.core;
 
+import com.jvanila.IPlatform;
+import com.jvanila.PlatformLocator;
+import com.jvanila.core.eventbus.IEventSubscriber;
+import com.jvanila.core.objectflavor.ComparableObject;
+
 /**
  * Created by pavan on 04/08/18
  */
-public class LaunchTimeDependency {
+public abstract class LaunchTimeDependency extends ComparableObject {
+
+    private static final int STATE_IDLE     = 0;
+    private static final int STATE_LOADING  = 1;
+    private static final int STATE_LOADED   = 2;
+
+    private IEventSubscriber mObserver;
+    private int mCurrentState;
+
+    public LaunchTimeDependency(IEventSubscriber subscriber) {
+        setState(STATE_IDLE);
+        mObserver = subscriber;
+        subscribe(mObserver);
+    }
+
+    private void setState(int state) {
+        mCurrentState = state;
+    }
+
+    protected void subscribe(IEventSubscriber observer) {
+        IPlatform platform = PlatformLocator.getPlatform();
+        platform.getEventBus().subscribe(loadEventName(), observer);
+    }
+
+    public void unsubscribe() {
+        IPlatform platform = PlatformLocator.getPlatform();
+        platform.getEventBus().subscribe(loadEventName(), mObserver);
+    }
+
+    public boolean isLoaded() {
+        return mCurrentState == STATE_LOADED;
+    }
+
+    public boolean needLoading() {
+        return mCurrentState == STATE_IDLE;
+    }
+
+    protected abstract String loadEventName();
+
+    public abstract void load();
+
+    public abstract void cancel();
+
 }

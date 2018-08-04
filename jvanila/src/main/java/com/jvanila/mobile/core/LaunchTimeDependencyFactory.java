@@ -18,10 +18,15 @@
 
 package com.jvanila.mobile.core;
 
+import com.jvanila.IPlatform;
+import com.jvanila.PlatformLocator;
 import com.jvanila.core.eventbus.IEvent;
 import com.jvanila.core.eventbus.IEventSubscriber;
+import com.jvanila.core.exception.VanilaException;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class LaunchTimeDependencyFactory implements IEventSubscriber {
 
@@ -36,23 +41,45 @@ public abstract class LaunchTimeDependencyFactory implements IEventSubscriber {
         void onLaunchTimeDependenciesLoadingError(Exception e);
     }
 
+    protected List<LaunchTimeDependency> mDependencyList;
+
     public void init() {
+        mDependencyList = new ArrayList<>();
     }
 
     public void load(ICallback callback) {
         mCallback = new WeakReference<>(callback);
         callback.onLaunchTimeDependenciesLoading();
-        subscribe();
         loadAsync();
     }
 
-    protected void subscribe() {
-        /*
-         * Subscribe LaunchTimeDependency related events
-         */
-    }
-
     protected abstract void loadAsync();
+
+    /**
+     * Call this from loadAsync implementation.
+     */
+    protected void loadInternal() {
+        try {
+
+            IPlatform platform = PlatformLocator.getPlatform();
+            if (platform.currentThread().isMain()) {
+                throw new VanilaException("CalledOnMainThreadException");
+            }
+
+            for (LaunchTimeDependency dependency : mDependencyList) {
+                if (dependency != null) {
+                    if (!dependency.needLoading()) {
+                        dependency.load();
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            if (mCallback != null) {
+                mCallback.get().onLaunchTimeDependenciesLoadingError(e);
+            }
+        }
+    }
 
     protected void onLoaded() {
         unsubscribe();
@@ -62,9 +89,12 @@ public abstract class LaunchTimeDependencyFactory implements IEventSubscriber {
     }
 
     protected void unsubscribe() {
-        /*
-         * Unsubscribe LaunchTimeDependency related events
-         */
+        for (LaunchTimeDependency dependency : mDependencyList) {
+            if (dependency != null) {
+                dependency.cancel();
+                dependency.unsubscribe();
+            }
+        }
     }
 
     @Override
@@ -72,9 +102,29 @@ public abstract class LaunchTimeDependencyFactory implements IEventSubscriber {
         /*
          * Process LaunchTimeDependency loading responses
          */
+
+        checkIsLoadingCompleted();
+    }
+
+    private void checkIsLoadingCompleted() {
+        if (mDependencyList.size() > 0) {
+            boolean loaded = true;
+            for (LaunchTimeDependency dependency : mDependencyList) {
+                if (dependency != null) {
+                    loaded = dependency.isLoaded();
+                    if (!loaded) {
+                        break;
+                    }
+                }
+            }
+            if (loaded) {
+                onLoaded();
+            }
+        }
     }
 
     public void release() {
+        unsubscribe();
         mCallback = null;
     }
 }

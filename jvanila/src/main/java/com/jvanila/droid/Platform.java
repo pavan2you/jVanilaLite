@@ -19,11 +19,13 @@
 package com.jvanila.droid;
 
 import com.jvanila.IPlatform;
+import com.jvanila.core.IThread;
 import com.jvanila.core.di.IInjector;
 import com.jvanila.core.eventbus.IEventBus;
 import com.jvanila.core.log.ILogger;
 import com.jvanila.droid.eventbus.EventBus;
 import com.jvanila.droid.log.Logger;
+import com.jvanila.droid.wrapper.ThreadWrapper;
 import com.jvanila.mobile.core.IApplication;
 
 public class Platform implements IPlatform {
@@ -93,6 +95,11 @@ public class Platform implements IPlatform {
         }
         mEventBus = null;
         mLogger = null;
+    }
+
+    @Override
+    public IThread currentThread() {
+        return new ThreadWrapper(Thread.currentThread());
     }
 
 }

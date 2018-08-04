@@ -18,6 +18,7 @@
 
 package com.jvanila;
 
+import com.jvanila.core.IThread;
 import com.jvanila.core.eventbus.IEventBus;
 import com.jvanila.core.log.ILogger;
 import com.jvanila.mobile.core.IApplication;
@@ -47,6 +48,8 @@ public interface IPlatform {
     IEventBus getEventBus();
 
     ILogger getLogger();
+
+    IThread currentThread();
 
     void release();
 }
