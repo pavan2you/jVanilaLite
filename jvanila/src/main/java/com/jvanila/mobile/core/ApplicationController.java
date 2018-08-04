@@ -50,7 +50,7 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
 
     private IPlatform mPlatform;
     private ILogger mLogger;
-    private LibraryFactory mLibraryFactory;
+    private LaunchTimeDependencyFactory mLaunchTimeDependencyFactory;
 
     private int mApplicationState;
 
@@ -62,8 +62,8 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
         initInternal();
     }
 
-    public void loadWith(LibraryFactory libraryFactory) {
-        mLibraryFactory = libraryFactory;
+    public void loadWith(LaunchTimeDependencyFactory launchTimeDependencyFactory) {
+        mLaunchTimeDependencyFactory = launchTimeDependencyFactory;
     }
 
     private void initInternal() {
@@ -83,7 +83,7 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
             mLogger.log(TAG, "onCreate");
         }
 
-        mLibraryFactory.init();
+        mLaunchTimeDependencyFactory.init();
         loadLibraries();
     }
 
@@ -100,20 +100,20 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
     private void loadLibraries() {
         mApplicationState = STATE_ON_LOADING;
 
-        mLibraryFactory.load(new LibraryFactory.ICallback() {
+        mLaunchTimeDependencyFactory.load(new LaunchTimeDependencyFactory.ICallback() {
 
             @Override
-            public void onLibrariesLoading() {
+            public void onLaunchTimeDependenciesLoading() {
                 onLoading();
             }
 
             @Override
-            public void onLibrariesLoaded() {
+            public void onLaunchTimeDependenciesLoaded() {
                 onReady();
             }
 
             @Override
-            public void onLibrariesLoadingError(Exception e) {
+            public void onLaunchTimeDependenciesLoadingError(Exception e) {
                 onFailed(e);
             }
         });
@@ -205,9 +205,9 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
 
         mLogger = null;
 
-        if (mLibraryFactory != null) {
-            mLibraryFactory.release();
-            mLibraryFactory = null;
+        if (mLaunchTimeDependencyFactory != null) {
+            mLaunchTimeDependencyFactory.release();
+            mLaunchTimeDependencyFactory = null;
         }
 
         mPlatform.release();

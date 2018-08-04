@@ -28,7 +28,7 @@ import com.jvanila.PlatformLocator;
 import com.jvanila.droid.Platform;
 import com.jvanila.mobile.core.ApplicationController;
 import com.jvanila.mobile.core.IApplication;
-import com.jvanila.mobile.core.LibraryFactory;
+import com.jvanila.mobile.core.LaunchTimeDependencyFactory;
 
 public class VanilaApplication extends Application implements IApplication {
 
@@ -55,8 +55,8 @@ public class VanilaApplication extends Application implements IApplication {
 		mController.onCreate();
 	}
 
-	protected LibraryFactory newLibraryFactory() {
-		return new LibraryFactory() {
+	protected LaunchTimeDependencyFactory newLibraryFactory() {
+		return new LaunchTimeDependencyFactory() {
 			@Override
 			protected void loadAsync() {
 				onLoaded();

@@ -20,17 +20,17 @@ package com.jvanila.mobile.core;
 
 import java.lang.ref.WeakReference;
 
-public abstract class LibraryFactory {
+public abstract class LaunchTimeDependencyFactory {
 
-    private WeakReference<LibraryFactory.ICallback> mCallback;
+    private WeakReference<LaunchTimeDependencyFactory.ICallback> mCallback;
 
     public interface ICallback {
 
-        void onLibrariesLoading();
+        void onLaunchTimeDependenciesLoading();
 
-        void onLibrariesLoaded();
+        void onLaunchTimeDependenciesLoaded();
 
-        void onLibrariesLoadingError(Exception e);
+        void onLaunchTimeDependenciesLoadingError(Exception e);
     }
 
     public void init() {
@@ -38,7 +38,7 @@ public abstract class LibraryFactory {
 
     public void load(ICallback callback) {
         mCallback = new WeakReference<>(callback);
-        callback.onLibrariesLoading();
+        callback.onLaunchTimeDependenciesLoading();
         loadAsync();
     }
 
@@ -46,7 +46,7 @@ public abstract class LibraryFactory {
 
     protected void onLoaded() {
         if (mCallback != null) {
-            mCallback.get().onLibrariesLoaded();
+            mCallback.get().onLaunchTimeDependenciesLoaded();
         }
     }
 
