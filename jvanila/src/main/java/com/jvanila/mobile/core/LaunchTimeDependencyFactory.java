@@ -23,12 +23,13 @@ import com.jvanila.PlatformLocator;
 import com.jvanila.core.eventbus.IEvent;
 import com.jvanila.core.eventbus.IEventSubscriber;
 import com.jvanila.core.exception.VanilaException;
+import com.jvanila.core.objectflavor.VanilaObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class LaunchTimeDependencyFactory implements IEventSubscriber {
+public abstract class LaunchTimeDependencyFactory extends VanilaObject implements IEventSubscriber {
 
     private WeakReference<LaunchTimeDependencyFactory.ICallback> mCallback;
 

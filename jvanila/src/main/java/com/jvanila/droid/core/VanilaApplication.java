@@ -21,11 +21,14 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Process;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.jvanila.BuildConfig;
 import com.jvanila.PlatformLocator;
+import com.jvanila.core.BuildInfo;
 import com.jvanila.droid.Platform;
+import com.jvanila.mobile.MobileBuildInfo;
 import com.jvanila.mobile.core.ApplicationController;
 import com.jvanila.mobile.core.IApplication;
 import com.jvanila.mobile.core.LaunchTimeDependencyFactory;
@@ -49,28 +52,29 @@ public class VanilaApplication extends Application implements IApplication {
 		onCreateController();
 	}
 
+	private void loadPlatformFactory() {
+		mPlatform = newPlatform();
+		mPlatform.setApplication(this);
+		PlatformLocator.setPlatform(mPlatform);
+	}
+
+	@NonNull
+	protected Platform newPlatform() {
+		return new Platform();
+	}
+
 	protected void onCreateController() {
 		mController = new ApplicationController<>(this);
 		mController.loadWith(newLibraryFactory());
 		mController.onCreate();
 	}
 
+	@NonNull
 	protected LaunchTimeDependencyFactory newLibraryFactory() {
-		return new LaunchTimeDependencyFactory() {
-			@Override
-			protected void loadAsync() {
-				onLoaded();
-			}
-		};
+		return new DefaultLaunchDependencyFactory();
 	}
 
-	protected void loadPlatformFactory() {
-		mPlatform = new Platform();
-		mPlatform.setApplication(this);
-		PlatformLocator.setPlatform(mPlatform);
-	}
-
-    @Override
+	@Override
     public ApplicationController<?> getController() {
         return mController;
     }
@@ -87,8 +91,9 @@ public class VanilaApplication extends Application implements IApplication {
 		return true;
 	}
 
+	@NonNull
 	protected Injector newInjector() {
-		return new Injector(this);
+		return new DefaultInjector(this);
 	}
 
     public boolean isInInitialization() {
@@ -110,7 +115,6 @@ public class VanilaApplication extends Application implements IApplication {
 	boolean isCorrupted() {
 		return mIsCorrupted;
 	}
-
 
 	@Override
 	public String getClassName() {
@@ -173,6 +177,35 @@ public class VanilaApplication extends Application implements IApplication {
 
 			AppRelaunchHandler.relauchAfter(this, mRelaunchAfterInterval);
 			exitApplication();
+		}
+	}
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	protected class DefaultLaunchDependencyFactory extends LaunchTimeDependencyFactory {
+
+		@Override
+		protected void loadAsync() {
+			onLoaded();
+		}
+	}
+
+	protected static class DefaultInjector extends Injector {
+
+		public DefaultInjector(VanilaApplication application) {
+			super(application);
+		}
+
+		@Override
+		protected void prepareBuildInfo() {
+			MobileBuildInfo buildInfo = PlatformLocator.getPlatform().getBuildInfo();
+			buildInfo.buildType = BuildConfig.DEBUG ?
+					BuildInfo.BUILD_TYPE_DEBUG : BuildInfo.BUILD_TYPE_RELEASE;
+			buildInfo.currentBuildId = String.valueOf(BuildConfig.VERSION_CODE);
+			buildInfo.appVersion = BuildConfig.VERSION_NAME;
 		}
 	}
 }

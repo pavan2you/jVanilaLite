@@ -26,6 +26,8 @@ import com.jvanila.core.log.ILogger;
 import com.jvanila.droid.eventbus.EventBus;
 import com.jvanila.droid.log.Logger;
 import com.jvanila.droid.wrapper.ThreadWrapper;
+import com.jvanila.mobile.MobileBuildInfo;
+import com.jvanila.mobile.MobilePlatformInfo;
 import com.jvanila.mobile.core.IApplication;
 
 public class Platform implements IPlatform {
@@ -36,6 +38,8 @@ public class Platform implements IPlatform {
     private IEventBus mEventBus;
     private ILogger mLogger;
     private IInjector mInjector;
+    private MobileBuildInfo mMobileBuildInfo;
+    private MobilePlatformInfo mMobilePlatformInfo;
 
     @Override
     public void setApplication(IApplication application) {
@@ -47,11 +51,12 @@ public class Platform implements IPlatform {
         return mApplication;
     }
 
-
+    @Override
     public void setInjector(IInjector injector) {
         this.mInjector = injector;
     }
 
+    @Override
     public IInjector getInjector() {
         return mInjector;
     }
@@ -88,6 +93,22 @@ public class Platform implements IPlatform {
     }
 
     @Override
+    public MobilePlatformInfo getPlatformInfo() {
+        if (mMobilePlatformInfo == null) {
+            mMobilePlatformInfo = new MobilePlatformInfo();
+        }
+        return mMobilePlatformInfo;
+    }
+
+    @Override
+    public MobileBuildInfo getBuildInfo() {
+        if (mMobileBuildInfo == null) {
+            mMobileBuildInfo = new MobileBuildInfo();
+        }
+        return mMobileBuildInfo;
+    }
+
+    @Override
     public void release() {
         mApplication = null;
         if (mEventBus != null) {
@@ -95,6 +116,8 @@ public class Platform implements IPlatform {
         }
         mEventBus = null;
         mLogger = null;
+        mMobileBuildInfo = null;
+        mMobilePlatformInfo = null;
     }
 
     @Override

@@ -147,6 +147,7 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
 
     protected void onReady() {
         mApplicationState = STATE_ON_READY;
+        mPlatform.getInjector().injectOnAppReady();
 
         for (WeakReference<ApplicationLifeCycleObserver> observerWeakRef : mLifeCycleObservers) {
             if (observerWeakRef == null) {
@@ -165,12 +166,12 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
         boolean found = false;
 
         if (mLifeCycleObservers.size() > 0) {
-            for (WeakReference<ApplicationLifeCycleObserver> observerWeakRef : mLifeCycleObservers) {
-                if (observerWeakRef == null) {
+            for (WeakReference<ApplicationLifeCycleObserver> weakObserver : mLifeCycleObservers) {
+                if (weakObserver == null) {
                     continue;
                 }
 
-                ApplicationLifeCycleObserver _observer = observerWeakRef.get();
+                ApplicationLifeCycleObserver _observer = weakObserver.get();
                 if (_observer != null && _observer.equals(observer)) {
                     found = true; // Observer presents, so no need to proceed
                 }

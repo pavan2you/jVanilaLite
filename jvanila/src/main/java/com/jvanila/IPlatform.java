@@ -19,8 +19,11 @@
 package com.jvanila;
 
 import com.jvanila.core.IThread;
+import com.jvanila.core.di.IInjector;
 import com.jvanila.core.eventbus.IEventBus;
 import com.jvanila.core.log.ILogger;
+import com.jvanila.mobile.MobileBuildInfo;
+import com.jvanila.mobile.MobilePlatformInfo;
 import com.jvanila.mobile.core.IApplication;
 
 public interface IPlatform {
@@ -32,6 +35,10 @@ public interface IPlatform {
     void setApplication(IApplication application);
 
     IApplication getApplication();
+
+    void setInjector(IInjector injector);
+
+    IInjector getInjector();
 
     /**
      * To check object type
@@ -50,6 +57,10 @@ public interface IPlatform {
     ILogger getLogger();
 
     IThread currentThread();
+
+    MobileBuildInfo getBuildInfo();
+
+    MobilePlatformInfo getPlatformInfo();
 
     void release();
 }
