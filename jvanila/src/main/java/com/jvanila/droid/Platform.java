@@ -52,13 +52,14 @@ public class Platform implements IPlatform {
     }
 
     @Override
-    public void setInjector(IInjector injector) {
+    public <T extends IInjector> void setInjector(T injector) {
         this.mInjector = injector;
     }
 
     @Override
-    public IInjector getInjector() {
-        return mInjector;
+    @SuppressWarnings("unchecked")
+    public <T extends IInjector> T getInjector() {
+        return (T) mInjector;
     }
 
     @Override

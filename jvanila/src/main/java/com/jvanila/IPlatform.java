@@ -36,9 +36,9 @@ public interface IPlatform {
 
     IApplication getApplication();
 
-    void setInjector(IInjector injector);
+    <T extends IInjector> void setInjector(T injector);
 
-    IInjector getInjector();
+    <T extends IInjector> T getInjector();
 
     /**
      * To check object type
