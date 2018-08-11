@@ -23,6 +23,7 @@ import com.jvanila.core.IThread;
 import com.jvanila.core.di.IInjector;
 import com.jvanila.core.eventbus.IEventBus;
 import com.jvanila.core.log.ILogger;
+import com.jvanila.droid.core.Injector;
 import com.jvanila.droid.eventbus.EventBus;
 import com.jvanila.droid.log.Logger;
 import com.jvanila.droid.wrapper.ThreadWrapper;
@@ -40,6 +41,10 @@ public class Platform implements IPlatform {
     private IInjector mInjector;
     private MobileBuildInfo mMobileBuildInfo;
     private MobilePlatformInfo mMobilePlatformInfo;
+
+    public Platform() {
+        mIsReady = true;
+    }
 
     @Override
     public void setApplication(IApplication application) {
@@ -110,20 +115,23 @@ public class Platform implements IPlatform {
     }
 
     @Override
+    public IThread currentThread() {
+        return new ThreadWrapper(Thread.currentThread());
+    }
+
+    @Override
     public void release() {
         mApplication = null;
         if (mEventBus != null) {
             mEventBus.flushBus();
         }
+        if (mInjector != null) {
+            ((Injector) mInjector).release();
+        }
+        mInjector = null;
         mEventBus = null;
         mLogger = null;
         mMobileBuildInfo = null;
         mMobilePlatformInfo = null;
     }
-
-    @Override
-    public IThread currentThread() {
-        return new ThreadWrapper(Thread.currentThread());
-    }
-
 }

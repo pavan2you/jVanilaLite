@@ -46,7 +46,6 @@ public abstract class Injector extends VanilaObject implements IInjector {
 
     @Override
     public void injectOnAppReady() {
-
     }
 
     protected void preparePlatformInfo() {
@@ -68,4 +67,8 @@ public abstract class Injector extends VanilaObject implements IInjector {
     }
 
     protected abstract void prepareBuildInfo();
+
+    public void release() {
+        mApplication = null;
+    }
 }

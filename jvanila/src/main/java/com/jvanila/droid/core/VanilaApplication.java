@@ -18,6 +18,7 @@
 package com.jvanila.droid.core;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Process;
@@ -32,6 +33,8 @@ import com.jvanila.mobile.MobileBuildInfo;
 import com.jvanila.mobile.core.ApplicationController;
 import com.jvanila.mobile.core.IApplication;
 import com.jvanila.mobile.core.LaunchTimeDependencyFactory;
+
+import java.lang.ref.WeakReference;
 
 public class VanilaApplication extends Application implements IApplication {
 
@@ -49,6 +52,7 @@ public class VanilaApplication extends Application implements IApplication {
         Log.i(getClass().getSimpleName(), "onCreate..");
 		mRelaunchAfterInterval = 1000;
 		loadPlatformFactory();
+		init();
 		onCreateController();
 	}
 
@@ -195,7 +199,7 @@ public class VanilaApplication extends Application implements IApplication {
 
 	protected static class DefaultInjector extends Injector {
 
-		public DefaultInjector(VanilaApplication application) {
+		DefaultInjector(VanilaApplication application) {
 			super(application);
 		}
 
@@ -207,5 +211,26 @@ public class VanilaApplication extends Application implements IApplication {
 			buildInfo.currentBuildId = String.valueOf(BuildConfig.VERSION_CODE);
 			buildInfo.appVersion = BuildConfig.VERSION_NAME;
 		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////  ACTIVITY WATCHER  ///////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	protected WeakReference<Activity> mCurrentActivityWeakRef;
+	protected WeakReference<Activity> mPreviousActivityWeakRef;
+
+	public void setCurrentActivity(Activity activity) {
+		Log.i(getClass().getSimpleName(), "setCurrentActivity.. " + activity);
+		mPreviousActivityWeakRef = mCurrentActivityWeakRef;
+		mCurrentActivityWeakRef = new WeakReference<Activity>(activity);
+	}
+
+	public Activity getCurrentActivity() {
+		return mCurrentActivityWeakRef == null ? null : mCurrentActivityWeakRef.get();
+	}
+
+	public Activity getPreviousActivity() {
+		return mPreviousActivityWeakRef  == null ? null : mPreviousActivityWeakRef.get();
 	}
 }

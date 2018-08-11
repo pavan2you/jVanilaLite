@@ -35,7 +35,7 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
 
         void onApplicationLoading();
 
-        void onApplicationLoadingError(Exception e);
+        void onApplicationLoadingError(Throwable e);
     }
 
     public static final int STATE_ON_INIT       = 0;
@@ -113,13 +113,13 @@ public class ApplicationController<A extends IApplication> extends VanilaObject 
             }
 
             @Override
-            public void onLaunchTimeDependenciesLoadingError(Exception e) {
+            public void onLaunchTimeDependenciesLoadingError(Throwable e) {
                 onFailed(e);
             }
         });
     }
 
-    protected void onFailed(Exception e) {
+    protected void onFailed(Throwable e) {
         for (WeakReference<ApplicationLifeCycleObserver> observerWeakRef : mLifeCycleObservers) {
             if (observerWeakRef == null) {
                 continue;

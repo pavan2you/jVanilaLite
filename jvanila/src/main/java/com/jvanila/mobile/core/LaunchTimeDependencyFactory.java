@@ -25,13 +25,15 @@ import com.jvanila.core.eventbus.IEventSubscriber;
 import com.jvanila.core.exception.VanilaException;
 import com.jvanila.core.objectflavor.VanilaObject;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class LaunchTimeDependencyFactory extends VanilaObject implements IEventSubscriber {
 
-    private WeakReference<LaunchTimeDependencyFactory.ICallback> mCallback;
+    private SoftReference<ICallback> mCallback;
+    private AtomicBoolean mLoading;
 
     public interface ICallback {
 
@@ -39,21 +41,30 @@ public abstract class LaunchTimeDependencyFactory extends VanilaObject implement
 
         void onLaunchTimeDependenciesLoaded();
 
-        void onLaunchTimeDependenciesLoadingError(Exception e);
+        void onLaunchTimeDependenciesLoadingError(Throwable e);
     }
 
+    protected IPlatform mPlatform;
     protected List<LaunchTimeDependency> mDependencyList;
+
+    public LaunchTimeDependencyFactory() {
+        mPlatform = PlatformLocator.getPlatform();
+    }
 
     public void init() {
         mDependencyList = new ArrayList<>();
     }
 
     public void load(ICallback callback) {
-        mCallback = new WeakReference<>(callback);
+        mCallback = new SoftReference<>(callback);
         callback.onLaunchTimeDependenciesLoading();
         loadAsync();
     }
 
+    /**
+     * loadAsync implementation must add each <code>LaunchTimeDependency</code>
+     * to <code>mDependencyList</code>, then it should trigger <code>loadInternal</code>
+     */
     protected abstract void loadAsync();
 
     /**
@@ -61,71 +72,102 @@ public abstract class LaunchTimeDependencyFactory extends VanilaObject implement
      */
     protected void loadInternal() {
         try {
-
-            IPlatform platform = PlatformLocator.getPlatform();
-            if (platform.currentThread().isMain()) {
+            if (mPlatform.currentThread().isMain()) {
                 throw new VanilaException("CalledOnMainThreadException");
             }
 
+            mLoading = new AtomicBoolean(true);
+            subscribe();
+
             for (LaunchTimeDependency dependency : mDependencyList) {
-                if (dependency != null) {
-                    if (!dependency.needLoading()) {
-                        dependency.load();
-                    }
+                if (dependency != null && dependency.needLoading()) {
+                    dependency.load();
                 }
             }
         }
         catch (Exception e) {
-            if (mCallback != null) {
-                mCallback.get().onLaunchTimeDependenciesLoadingError(e);
-            }
+            onLoadingFailure(e);
         }
     }
 
+    protected void subscribe() {
+        mPlatform.getEventBus().subscribe(LaunchTimeDependencyEvent.CLASS_NAME, this);
+    }
+
     protected void onLoaded() {
+        cancelOngoingDependencies();
         unsubscribe();
         if (mCallback != null) {
             mCallback.get().onLaunchTimeDependenciesLoaded();
         }
+        mLoading.set(false);
+    }
+
+    protected void onLoadingFailure(Throwable error) {
+        cancelOngoingDependencies();
+        unsubscribe();
+        if (mCallback != null) {
+            mCallback.get().onLaunchTimeDependenciesLoadingError(error);
+        }
+        mLoading.set(false);
     }
 
     protected void unsubscribe() {
+        mPlatform.getEventBus().unsubscribe(LaunchTimeDependencyEvent.CLASS_NAME,
+                this);
+    }
+
+    private void cancelOngoingDependencies() {
         for (LaunchTimeDependency dependency : mDependencyList) {
-            if (dependency != null) {
+            if (dependency == null) {
+                continue;
+            }
+            if (!dependency.isLoaded() || !dependency.isFailed()) {
                 dependency.cancel();
-                dependency.unsubscribe();
             }
         }
     }
 
     @Override
     public void onEvent(IEvent event) {
-        /*
-         * Process LaunchTimeDependency loading responses
-         */
-
-        checkIsLoadingCompleted();
+        if (event.isInstanceOf(LaunchTimeDependencyEvent.class)) {
+            checkIsLoadingCompleted();
+        }
     }
 
     private void checkIsLoadingCompleted() {
-        if (mDependencyList.size() > 0) {
-            boolean loaded = true;
-            for (LaunchTimeDependency dependency : mDependencyList) {
-                if (dependency != null) {
-                    loaded = dependency.isLoaded();
-                    if (!loaded) {
-                        break;
-                    }
-                }
+        if (mDependencyList.size() == 0) {
+            return;
+        }
+
+        boolean loaded = true;
+        Throwable error = null;
+
+        for (LaunchTimeDependency dependency : mDependencyList) {
+            if (dependency == null) {
+                continue;
             }
-            if (loaded) {
-                onLoaded();
+
+            loaded = dependency.isLoaded();
+            if (!loaded) {
+                error = dependency.getError();
+                break;
             }
+        }
+
+        if (loaded) {
+            onLoaded();
+        }
+        else if (error != null) {
+            onLoadingFailure(error);
         }
     }
 
     public void release() {
+        cancelOngoingDependencies();
         unsubscribe();
+        mLoading = null;
+        mCallback.clear();
         mCallback = null;
     }
 }

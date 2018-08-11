@@ -141,7 +141,7 @@ public class Presenter<V extends IPresentableView> extends Processor<V> implemen
     }
 
     @Override
-    public void onApplicationLoadingError(Exception e) {
+    public void onApplicationLoadingError(Throwable e) {
         if (mLogger.canLog()) {
             mLogger.log(TAG, "onApplicationLoadingError");
         }

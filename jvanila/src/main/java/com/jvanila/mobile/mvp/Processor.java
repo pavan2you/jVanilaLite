@@ -18,10 +18,10 @@
 
 package com.jvanila.mobile.mvp;
 
-import com.jvanila.core.objectflavor.ComparableObject;
 import com.jvanila.core.objectflavor.IComparableObject;
+import com.jvanila.core.objectflavor.VanilaObject;
 
-public class Processor<V extends IView> extends ComparableObject {
+public class Processor<V extends IView> extends VanilaObject implements IComparableObject {
 
     @Override
     public boolean isEqualsTo(IComparableObject object) {
@@ -31,5 +31,10 @@ public class Processor<V extends IView> extends ComparableObject {
     @Override
     public int hashOfObject() {
         return hashCode();
+    }
+
+    @Override
+    public boolean isInstanceOf(Class<?> clazz) {
+        return clazz != null && clazz.isAssignableFrom(getClass());
     }
 }

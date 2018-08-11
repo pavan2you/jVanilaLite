@@ -62,6 +62,7 @@ public class VanilaAppCompatActivity extends AppCompatActivity implements IPrese
             mApplication.relaunch(false);
         }
         else {
+            mApplication.setCurrentActivity(this);
             onCreateView(savedInstanceState);
         }
     }
@@ -75,6 +76,7 @@ public class VanilaAppCompatActivity extends AppCompatActivity implements IPrese
     }
 
     protected void onCreateView(Bundle savedInstanceState) {
+
     }
 
     protected void loadController(Bundle savedInstanceState) {
